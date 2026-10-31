@@ -68,12 +68,14 @@ export default function Login({ configured }: { configured: boolean }) {
         >
           Continuer avec Google
         </button>
-        <button
-          disabled={!configured || pending}
-          onClick={() => login("apple")}
-        >
-          Continuer avec Apple
-        </button>
+        {process.env.NEXT_PUBLIC_APPLE_AUTH_ENABLED === "true" && (
+          <button
+            disabled={!configured || pending}
+            onClick={() => login("apple")}
+          >
+            Continuer avec Apple
+          </button>
+        )}
       </div>
       <p role="status">{message}</p>
       <p className="demo-note">

@@ -50,6 +50,8 @@ export default function RootLayout({
               pause café.
             </Link>
             <p>Un bon café. Une belle rencontre. Une pause à soi.</p>
+            <Link href="/avis-et-moderation">Notre politique d’avis</Link>
+            <Link href="/villes/paris">Les adresses par ville</Link>
             <span>France · Français · EUR €</span>
             <small>
               © {new Date().getFullYear()} Pause Café ·{" "}

@@ -42,6 +42,14 @@ export async function POST(req: NextRequest) {
       { error: "Trop de tentatives. Réessayez dans 15 minutes." },
       { status: 429 },
     );
+  if (
+    body.data.method === "apple" &&
+    process.env.NEXT_PUBLIC_APPLE_AUTH_ENABLED !== "true"
+  )
+    return NextResponse.json(
+      { error: "La connexion Apple n’est pas encore activée." },
+      { status: 503 },
+    );
   const auth = await supabase();
   const redirectTo = `${origin}/auth/callback`;
   if (body.data.method === "email") {

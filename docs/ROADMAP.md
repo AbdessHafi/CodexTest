@@ -3,7 +3,7 @@
 ## Phases MVP
 
 1. Socle : découverte, carte, fiches SSR, données fictives, schéma et authentification Supabase. Voir README pour les validations et limites.
-2. Avis authentifiés, critères de notation, preuve de visite, modération et signalements, pages SEO ville/quartier, données structurées et sitemap.
+2. Implémenté : avis authentifiés, critères de notation, preuve de visite, modération et signalements, photos privées, hook CAPTCHA, pages SEO ville/quartier, données structurées et sitemap. Voir PHASE-2.md pour configuration et limites.
 3. Revendication SIRET et contrôle administrateur, espace propriétaire, gestion menus/photos/horaires et stockage S3.
 4. Réservations transactionnelles, capacités par créneau, concurrence, annulations, calendrier, export CSV, confirmations et rappels Resend.
 5. Stripe, webhooks idempotents, abonnements, frais par couvert, placements explicitement sponsorisés et plafonnés, revenus administrateur.

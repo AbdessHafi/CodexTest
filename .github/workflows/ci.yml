@@ -21,6 +21,8 @@ jobs:
       DIRECT_URL: postgresql://pause:pause_local@localhost:5432/pause
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -30,9 +32,12 @@ jobs:
       - run: npm run db:seed
       - run: npm run db:seed
       - run: npm run test:db
+      - run: npm run test:reviews:db
+      - run: npm run security:secrets
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+      - run: npm run test:e2e:reviews

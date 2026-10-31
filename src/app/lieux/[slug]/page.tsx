@@ -1,6 +1,14 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getVenue } from "@/lib/venues";
+import ReviewSection from "@/components/reviews/section";
+import { publishedReviews } from "@/lib/reviews/queries";
+import {
+  pageMetadata,
+  venueStructuredData,
+  safeJson,
+  slugify,
+} from "@/lib/seo";
 import { isOpen } from "@/lib/search";
 export const dynamic = "force-dynamic";
 export async function generateMetadata({
@@ -9,10 +17,14 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const v = await getVenue((await params).slug);
-  return {
-    title: v ? `${v.name}, ${v.city}` : "Adresse introuvable",
-    description: v?.description,
-  };
+  return v
+    ? pageMetadata(
+        `${v.name}, ${v.city}`,
+        v.description,
+        `/lieux/${v.slug}`,
+        v.source === "DEMO",
+      )
+    : { title: "Adresse introuvable", robots: { index: false } };
 }
 const days = [
   "Dimanche",
@@ -30,9 +42,16 @@ export default async function VenuePage({
 }) {
   const v = await getVenue((await params).slug);
   if (!v) notFound();
+  const { summary } = await publishedReviews(v.id);
   return (
     <article className="detail">
-      <Link className="breadcrumb" href={`/?q=${encodeURIComponent(v.city)}`}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: safeJson(venueStructuredData(v, summary)),
+        }}
+      />
+      <Link className="breadcrumb" href={`/villes/${slugify(v.city)}`}>
         ← Explorer les adresses · {v.city}
       </Link>
       <span className="eyebrow">
@@ -97,13 +116,7 @@ export default async function VenuePage({
               <p>La carte n’a pas encore été renseignée.</p>
             )}
           </section>
-          <section>
-            <h2>Les avis de la communauté</h2>
-            <p>
-              Aucun avis publié pour le moment. La collecte et la modération des
-              avis arrivent en phase 2.
-            </p>
-          </section>
+          <ReviewSection venueId={v.id} />
           <section>
             <h2>Nous trouver</h2>
             <p>

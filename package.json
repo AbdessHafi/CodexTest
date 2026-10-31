@@ -14,9 +14,13 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed.ts",
     "db:import": "tsx scripts/import-osm.ts",
-    "test:db": "tsx scripts/check-db.ts"
+    "test:db": "tsx scripts/check-db.ts",
+    "test:reviews:db": "vitest run --config vitest.db.config.ts",
+    "test:e2e:reviews": "playwright test --config playwright.db.config.ts",
+    "security:secrets": "tsx scripts/check-secrets.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1161.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.80.0",
     "dotenv": "^18.0.9",
@@ -28,6 +32,7 @@
     "pg": "^8.23.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "sharp": "^0.35.5",
     "zod": "^4.1.0"
   },
   "devDependencies": {

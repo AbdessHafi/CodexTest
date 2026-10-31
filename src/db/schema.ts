@@ -198,9 +198,12 @@ export const reviews = pgTable(
     text: text("text").notNull(),
     verified: boolean("verified").default(false).notNull(),
     status: reviewStatus("status").default("PENDING").notNull(),
+    contentHash: text("content_hash"),
+    abuseReason: text("abuse_reason"),
     createdAt: created(),
   },
   (t) => [
+    index("review_moderation_idx").on(t.status, t.createdAt),
     unique().on(t.userId, t.venueId, t.visitDate),
     check(
       "review_ratings",
@@ -271,16 +274,20 @@ export const invoices = pgTable("invoices", {
     .notNull(),
   stripeInvoiceId: text("stripe_invoice_id").unique(),
 });
-export const reportFlags = pgTable("report_flags", {
-  id: id(),
-  reporterId: uuid("reporter_id")
-    .references(() => users.id)
-    .notNull(),
-  targetId: text("target_id").notNull(),
-  reason: text("reason").notNull(),
-  status: text("status").default("PENDING").notNull(),
-  createdAt: created(),
-});
+export const reportFlags = pgTable(
+  "report_flags",
+  {
+    id: id(),
+    reporterId: uuid("reporter_id")
+      .references(() => users.id)
+      .notNull(),
+    targetId: text("target_id").notNull(),
+    reason: text("reason").notNull(),
+    status: text("status").default("PENDING").notNull(),
+    createdAt: created(),
+  },
+  (t) => [unique("reporter_review_unique").on(t.reporterId, t.targetId)],
+);
 export const auditLogs = pgTable("audit_logs", {
   id: id(),
   actorId: uuid("actor_id")
@@ -290,4 +297,18 @@ export const auditLogs = pgTable("audit_logs", {
   targetId: text("target_id").notNull(),
   metadata: jsonb("metadata"),
   createdAt: created(),
+});
+
+export const reviewPhotos = pgTable("review_photos", {
+  id: id(),
+  reviewId: text("review_id")
+    .references(() => reviews.id, { onDelete: "cascade" })
+    .notNull(),
+  objectKey: text("object_key").unique().notNull(),
+  alt: text("alt").notNull(),
+});
+export const abuseBuckets = pgTable("abuse_buckets", {
+  key: text("key").primaryKey(),
+  window: timestamp("window", { withTimezone: true }).notNull(),
+  count: integer("count").notNull(),
 });

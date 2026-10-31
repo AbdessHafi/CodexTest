@@ -25,6 +25,7 @@ export async function supabase() {
   );
 }
 export async function requireRole(roles: ("CONSUMER" | "OWNER" | "ADMIN")[]) {
+  if (!authConfigured()) return null;
   const auth = await supabase();
   const {
     data: { user },

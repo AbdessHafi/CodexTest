@@ -4,7 +4,7 @@ export async function getVenues(): Promise<Venue[]> {
   if (isDemo()) return demoVenues;
   const { db } = await import("./db");
   const { venues, menuItems, venueHours } = await import("@/db/schema");
-  const rows = await db.select().from(venues).orderBy(venues.name).limit(500);
+  const rows = await db.select().from(venues).orderBy(venues.name);
   const menu = await db.select().from(menuItems);
   const hours = await db.select().from(venueHours);
   return rows.map((v) => ({

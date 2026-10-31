@@ -1,0 +1,38 @@
+name: Validation
+on: [push, pull_request]
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: pause
+          POSTGRES_PASSWORD: pause_local
+          POSTGRES_DB: pause
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pause -d pause"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DEMO_MODE: "true"
+      DATABASE_URL: postgresql://pause:pause_local@localhost:5432/pause
+      DIRECT_URL: postgresql://pause:pause_local@localhost:5432/pause
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run db:migrate
+      - run: npm run db:seed
+      - run: npm run db:seed
+      - run: npm run test:db
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

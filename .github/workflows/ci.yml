@@ -28,10 +28,15 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run db:migrate
-      - run: npm run db:seed
-      - run: npm run db:seed
-      - run: npm run test:db
+      - name: Préparer et vérifier la base locale
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://fixture.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_local_validation_only
+        run: |
+          npm run db:migrate
+          npm run db:seed
+          npm run db:seed
+          npm run test:db
       - run: npm run test:reviews:db
       - run: npm run security:secrets
       - run: npm run lint

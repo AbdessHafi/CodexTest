@@ -50,3 +50,20 @@ La phase 3 ajoute codes e-mail, preuves privées, gestion propriétaire et stati
 - Statistiques uniquement agrégées : pas d’IP brut ni cookie analytique. La relation d’un favori au compte est séparée de la table d’agrégats. Finaliser les notices et politiques de conservation avant de collecter des données réelles.
 
 La phase 2 a ensuite bien été poussée sur GitHub (`d2e1418` confirmé sur `main`). Les mentions de refus API plus haut décrivent l’état rencontré pendant sa préparation, pas un échec de sauvegarde définitif. La phase 3 est livrée par fusion Git sans dépendre d’une publication d’environnement cloud.
+
+## Configurer Supabase en 5 minutes
+
+1. **Copier la bonne connexion.** Dans votre projet Supabase, ouvrir **Connect**, choisir le format URI et **Session pooler** (port **5432**). Copier la chaîne complète : l’utilisateur est généralement `postgres.<référence-projet>`. Ne pas utiliser la connexion directe `db.<référence>.supabase.co` ni le pooler Transaction sur 6543 pour ces commandes.
+2. **Renseigner le mot de passe de la base.** Si vous ne le connaissez plus, ouvrir **Project Settings → Database → Reset database password** (ou le panneau Database Settings selon l’interface). Ce n’est pas le mot de passe de votre compte Supabase. Après réinitialisation, mettre à jour les deux URL. Pour éviter les erreurs de copie, un mot de passe long et aléatoire composé de lettres/chiffres peut être créé dans votre gestionnaire de mots de passe ; sinon, encoder les caractères réservés du mot de passe en `%XX` **uniquement dans la partie mot de passe**, sans encoder toute l’URL. Ne jamais utiliser un encodeur public en ligne avec un vrai mot de passe.
+3. **Compléter `.env` ou `.env.local` sur votre Mac**, dans le dossier du projet. `DATABASE_URL` est la connexion PostgreSQL pour les données, `DIRECT_URL` celle des migrations : vous pouvez mettre **la même chaîne Session pooler** dans les deux. Le nom historique `DIRECT_URL` n’oblige pas à employer la connexion directe. Remplacer le placeholder du mot de passe, sans laisser de crochets ni `COLLE_ICI`, ajouter `?sslmode=verify-full` (ou `&sslmode=verify-full` s’il existe déjà des paramètres), et mettre `DEMO_MODE=false` pour Supabase. La vérification TLS reste activée.
+4. **Ajouter les paramètres publics de l’application.** `NEXT_PUBLIC_SUPABASE_URL` est l’URL HTTPS du projet, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` sa clé **Publishable** depuis les paramètres API/clé du projet. Ils ne remplacent pas le mot de passe PostgreSQL. Une clé secrète `sb_secret_*` ou `service_role` ne doit jamais être dans une variable `NEXT_PUBLIC_*`. `.env*` reste ignoré par Git, sauf le modèle `.env.example`. Les scripts chargent `.env.local` avant `.env` ; les variables exportées dans le Terminal restent prioritaires. Corriger aussi une ancienne valeur dans ces emplacements si elle prend le dessus.
+5. **Exécuter depuis le dossier du projet :**
+
+   ```sh
+   npm run check-env
+   npm run db:setup
+   ```
+
+   Le diagnostic n’affiche que l’utilisateur, l’hôte, le port et la base, avec le mot de passe remplacé par `****`. Il teste `SELECT 1` et PostGIS avec une limite de 10 secondes par connexion distincte. Sur une base neuve, PostGIS absent est signalé puis activé par la migration. `db:setup` s’arrête au premier échec ; en cas de succès, il affiche **« Base prête : N tables, 50 lieux »**. Le seed ajoute les lieux fictifs sans réécrire les fiches existantes. `db:migrate`, `db:seed` et `test:db` exécutent eux aussi le diagnostic avant de travailler.
+
+En cas de `ENOTFOUND base`, recopier **l’URL Session pooler complète**, pas seulement le mot de passe : `base` n’est pas l’hôte Supabase. Pour « Tenant or user not found », recopier l’hôte et `postgres.<référence-projet>` du même projet. Pour un timeout, vérifier le projet actif et l’accès réseau/VPN au port 5432. Aucun partage de `.env`, de mot de passe ou de capture contenant une URL complète n’est nécessaire.

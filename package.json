@@ -20,7 +20,9 @@
     "security:secrets": "tsx scripts/check-secrets.ts",
     "db:seed:owner": "tsx scripts/seed-owner.ts",
     "dev:owner-demo": "tsx scripts/dev-owner.ts",
-    "mail:flush": "tsx scripts/flush-mail.ts"
+    "mail:flush": "tsx scripts/flush-mail.ts",
+    "check-env": "tsx scripts/check-env.ts",
+    "db:setup": "tsx scripts/setup-db.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1161.0",

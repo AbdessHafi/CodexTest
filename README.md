@@ -91,3 +91,20 @@ Voir [docs/ROADMAP.md](docs/ROADMAP.md). Voir [docs/PHASE-2.md](docs/PHASE-2.md)
 La branche `phase-3` ajoute revendication avec code e-mail, validation administrateur, `/pro`, gestion de fiche/horaires/photos, carte avancée et CSV, plats du jour/à la une et statistiques agrégées. [Configuration, tests et limites](docs/PHASE-3.md).
 
 Après migration locale, `npm run dev:owner-demo` démarre des identités et un stockage fictifs sur boucle locale, sans Supabase, S3 ou Resend externes. `npm run db:seed:owner` prépare uniquement les fixtures. Ne pas exposer ce mode sur Internet. Le mode normal nécessite toujours les vrais services configurés. Les nouvelles variables sont dans `.env.example`. Planifier `npm run mail:flush` en production pour les notifications en attente.
+
+## Configurer Supabase en 5 minutes
+
+1. **Copier la bonne connexion.** Dans votre projet Supabase, ouvrir **Connect**, choisir le format URI et **Session pooler** (port **5432**). Copier la chaîne complète : l’utilisateur est généralement `postgres.<référence-projet>`. Ne pas utiliser la connexion directe `db.<référence>.supabase.co` ni le pooler Transaction sur 6543 pour ces commandes.
+2. **Renseigner le mot de passe de la base.** Si vous ne le connaissez plus, ouvrir **Project Settings → Database → Reset database password** (ou le panneau Database Settings selon l’interface). Ce n’est pas le mot de passe de votre compte Supabase. Après réinitialisation, mettre à jour les deux URL. Pour éviter les erreurs de copie, un mot de passe long et aléatoire composé de lettres/chiffres peut être créé dans votre gestionnaire de mots de passe ; sinon, encoder les caractères réservés du mot de passe en `%XX` **uniquement dans la partie mot de passe**, sans encoder toute l’URL. Ne jamais utiliser un encodeur public en ligne avec un vrai mot de passe.
+3. **Compléter `.env` ou `.env.local` sur votre Mac**, dans le dossier du projet. `DATABASE_URL` est la connexion PostgreSQL pour les données, `DIRECT_URL` celle des migrations : vous pouvez mettre **la même chaîne Session pooler** dans les deux. Le nom historique `DIRECT_URL` n’oblige pas à employer la connexion directe. Remplacer le placeholder du mot de passe, sans laisser de crochets ni `COLLE_ICI`, ajouter `?sslmode=verify-full` (ou `&sslmode=verify-full` s’il existe déjà des paramètres), et mettre `DEMO_MODE=false` pour Supabase. La vérification TLS reste activée.
+4. **Ajouter les paramètres publics de l’application.** `NEXT_PUBLIC_SUPABASE_URL` est l’URL HTTPS du projet, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` sa clé **Publishable** depuis les paramètres API/clé du projet. Ils ne remplacent pas le mot de passe PostgreSQL. Une clé secrète `sb_secret_*` ou `service_role` ne doit jamais être dans une variable `NEXT_PUBLIC_*`. `.env*` reste ignoré par Git, sauf le modèle `.env.example`. Les scripts chargent `.env.local` avant `.env` ; les variables exportées dans le Terminal restent prioritaires. Corriger aussi une ancienne valeur dans ces emplacements si elle prend le dessus.
+5. **Exécuter depuis le dossier du projet :**
+
+   ```sh
+   npm run check-env
+   npm run db:setup
+   ```
+
+   Le diagnostic n’affiche que l’utilisateur, l’hôte, le port et la base, avec le mot de passe remplacé par `****`. Il teste `SELECT 1` et PostGIS avec une limite de 10 secondes par connexion distincte. Sur une base neuve, PostGIS absent est signalé puis activé par la migration. `db:setup` s’arrête au premier échec ; en cas de succès, il affiche **« Base prête : N tables, 50 lieux »**. Le seed ajoute les lieux fictifs sans réécrire les fiches existantes. `db:migrate`, `db:seed` et `test:db` exécutent eux aussi le diagnostic avant de travailler.
+
+En cas de `ENOTFOUND base`, recopier **l’URL Session pooler complète**, pas seulement le mot de passe : `base` n’est pas l’hôte Supabase. Pour « Tenant or user not found », recopier l’hôte et `postgres.<référence-projet>` du même projet. Pour un timeout, vérifier le projet actif et l’accès réseau/VPN au port 5432. Aucun partage de `.env`, de mot de passe ou de capture contenant une URL complète n’est nécessaire.

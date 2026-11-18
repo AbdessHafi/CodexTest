@@ -34,6 +34,7 @@ export default defineConfig({
         NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54329",
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "test-public-key",
         CAPTCHA_MODE: "disabled",
+        MAIL_TRANSPORT: "local",
         S3_ENDPOINT: "http://127.0.0.1:54329",
         S3_BUCKET: "test-private",
         S3_REGION: "eu-west-3",

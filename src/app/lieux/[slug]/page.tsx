@@ -27,7 +27,7 @@ export async function generateMetadata({
         `${v.name}, ${v.city}`,
         v.description,
         `/lieux/${v.slug}`,
-        v.source === "DEMO",
+        ["DEMO", "LOCAL_DEMO"].includes(v.source),
       )
     : { title: "Adresse introuvable", robots: { index: false } };
 }
@@ -48,7 +48,7 @@ export default async function VenuePage({
   const v = await getVenue((await params).slug);
   if (!v) notFound();
   const { summary } = await publishedReviews(v.id);
-  if (v.source !== "DEMO") {
+  if (!["DEMO", "LOCAL_DEMO"].includes(v.source)) {
     try {
       await recordActivity(v.id, "views");
     } catch {
@@ -76,7 +76,7 @@ export default async function VenuePage({
           {isOpen(v) ? "Ouvert maintenant" : "Actuellement fermé"}
         </span>
       </p>
-      {v.source === "DEMO" && (
+      {["DEMO", "LOCAL_DEMO"].includes(v.source) && (
         <p className="notice">
           Établissement fictif de démonstration. Les adresses, horaires et menus
           ne correspondent pas à un commerce réel.
@@ -98,13 +98,15 @@ export default async function VenuePage({
           height={450}
         />
       )}
-      <div
-        className="detail-hero"
-        role="img"
-        aria-label="Illustration d’une tasse de café"
-      >
-        ☕
-      </div>
+      {!v.images?.some((p) => p.cover) && (
+        <div
+          className="detail-hero"
+          role="img"
+          aria-label="Illustration d’une tasse de café"
+        >
+          ☕
+        </div>
+      )}
       {!!v.images?.filter((p) => !p.menuItemId).length && (
         <div className="venue-gallery">
           {v.images
@@ -140,7 +142,9 @@ export default async function VenuePage({
         {v.instagram && <a href={v.instagram}>Instagram</a>}
         {v.facebook && <a href={v.facebook}>Facebook</a>}
       </div>
-      {v.source !== "DEMO" && <FavoriteButton id={v.id} />}
+      {!["DEMO", "LOCAL_DEMO"].includes(v.source) && (
+        <FavoriteButton id={v.id} />
+      )}
       <div className="detail-columns">
         <div>
           <section>
@@ -165,11 +169,13 @@ export default async function VenuePage({
             {v.menu.length ? (
               v.menu.map((m, i) => (
                 <div key={m.id || m.name}>
-                  {(i === 0 || v.menu[i - 1].category !== m.category) && (
-                    <h3 className="menu-category">
-                      {m.category || "À la carte"}
-                    </h3>
-                  )}
+                  {m.category &&
+                    m.category !== "À la carte" &&
+                    (i === 0 || v.menu[i - 1].category !== m.category) && (
+                      <h3 className="menu-category">
+                        {m.category || "À la carte"}
+                      </h3>
+                    )}
                   <div className="menu-item">
                     <div>
                       <strong>{m.name}</strong>

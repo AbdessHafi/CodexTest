@@ -60,7 +60,7 @@ export function venueStructuredData(
       longitude: v.longitude,
     },
     priceRange: "€".repeat(v.price),
-    ...(v.source !== "DEMO" && summary.count
+    ...(!["DEMO", "LOCAL_DEMO"].includes(v.source) && summary.count
       ? {
           aggregateRating: {
             "@type": "AggregateRating",

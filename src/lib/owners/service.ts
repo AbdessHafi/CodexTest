@@ -86,12 +86,35 @@ export async function submitClaim(
         throw new ReviewError(409, "Cette fiche est déjà revendiquée.");
       if (venue.siret && venue.siret !== parsed.siret)
         throw new ReviewError(409, "Le SIRET ne correspond pas à cette fiche.");
-      await tx
+      const expired = await tx
         .update(venueClaims)
-        .set({ status: "REJECTED", reason: "Vérification e-mail expirée." })
+        .set({
+          status: "REJECTED",
+          reason: "Vérification e-mail expirée.",
+          codeHash: null,
+        })
         .where(
           sql`${venueClaims.venueId}=${venue.id} AND ${venueClaims.status}='PENDING' AND ${venueClaims.emailVerifiedAt} IS NULL AND ${venueClaims.codeExpires}<now()`,
-        );
+        )
+        .returning();
+      for (const previous of expired) {
+        await tx
+          .insert(auditLogs)
+          .values({
+            actorId: user.id,
+            action: "CLAIM_EXPIRED",
+            targetId: previous.id,
+            metadata: { reason: "Vérification e-mail expirée." },
+          });
+        await tx
+          .insert(mailOutbox)
+          .values({
+            recipient: previous.businessEmail,
+            subject: "Demande Pause Café expirée",
+            text: "Votre demande a expiré sans vérification e-mail. Vous pouvez en déposer une nouvelle.",
+          });
+      }
+
       await tx.insert(venueClaims).values({
         id,
         venueId: venue.id,
@@ -153,6 +176,22 @@ export async function verifyClaimCode(user: Actor, id: string, code: string) {
             },
       )
       .where(eq(venueClaims.id, id));
+    if (!valid && attempts >= 5) {
+      await tx
+        .insert(auditLogs)
+        .values({
+          actorId: user.id,
+          action: "CLAIM_CODE_LOCKED",
+          targetId: id,
+        });
+      await tx
+        .insert(mailOutbox)
+        .values({
+          recipient: claim.businessEmail,
+          subject: "Demande Pause Café rejetée",
+          text: "Votre demande a été rejetée après cinq codes incorrects. Vous pouvez déposer une nouvelle demande.",
+        });
+    }
     if (valid)
       await tx.insert(auditLogs).values({
         actorId: user.id,
@@ -390,7 +429,9 @@ export async function ownerEdit(
         .from(menuItems)
         .where(eq(menuItems.venueId, venueId));
       if (count >= 100) throw new ReviewError(409, "Cent produits maximum.");
-      await tx.insert(menuItems).values({ ...command.data, venueId });
+      await tx
+        .insert(menuItems)
+        .values({ ...command.data, venueId, position: count });
     }
     if (command.action === "menu-update" || command.action === "menu-delete") {
       const [item] = await tx

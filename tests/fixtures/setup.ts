@@ -18,10 +18,24 @@ export default async function setup() {
         [ids],
       );
       await pool.query("DELETE FROM reviews WHERE venue_id=$1", [venue]);
-      await pool.query("DELETE FROM venues WHERE id=$1", [venue]);
+      await pool.query("DELETE FROM venues WHERE id=ANY($1::text[])", [
+        [venue, `e2e-phase3-${p}`],
+      ]);
+      await pool.query("DELETE FROM mail_outbox WHERE recipient=$1", [
+        `claimant-${p}@example.invalid`,
+      ]);
       await pool.query("DELETE FROM abuse_buckets WHERE key=ANY($1::text[])", [
         ids.flatMap((id) =>
-          ["review", "report", "reply", "moderate"].map((a) => `${a}:${id}`),
+          [
+            "review",
+            "report",
+            "reply",
+            "moderate",
+            "owner",
+            "claim",
+            "claim-code",
+            "claim-resend",
+          ].map((a) => `${a}:${id}`),
         ),
       ]);
       await pool.query("DELETE FROM users WHERE id=ANY($1::uuid[])", [ids]);
@@ -37,6 +51,10 @@ export default async function setup() {
     await pool.query(
       `INSERT INTO venues(id,slug,name,city,neighborhood,address,latitude,longitude,type,price,tags,description,source) VALUES ($1,$1,'Brunch de test','Paris','Paris 11e','Adresse de test',48.85,2.35,'Brunch',2,'{}','Fixture automatisée, pas un établissement réel.','TEST')`,
       [venueId(p)],
+    );
+    await pool.query(
+      `INSERT INTO venues(id,slug,name,city,neighborhood,address,latitude,longitude,type,price,tags,description,source) VALUES ($1,$1,$2,'Paris','Paris 11e','Adresse fictive',48.85,2.35,'Brunch',2,'{}','Établissement de test pour la revendication.','TEST')`,
+      [`e2e-phase3-${p}`, `Revendication ${p}`],
     );
     await pool.query(
       `INSERT INTO venue_owners(id,user_id,venue_id,status) VALUES ($1,$2,$3,'APPROVED')`,

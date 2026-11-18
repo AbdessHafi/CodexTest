@@ -60,7 +60,7 @@ export function FavoriteButton({ id }: { id: string }) {
       >
         Ajouter / retirer des favoris
       </button>
-      <p role="status">{message}</p>
+      {message && <p role="status">{message}</p>}
     </div>
   );
 }

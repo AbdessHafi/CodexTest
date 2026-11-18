@@ -4,7 +4,7 @@
 
 1. Socle : découverte, carte, fiches SSR, données fictives, schéma et authentification Supabase. Voir README pour les validations et limites.
 2. Implémenté : avis authentifiés, critères de notation, preuve de visite, modération et signalements, photos privées, hook CAPTCHA, pages SEO ville/quartier, données structurées et sitemap. Voir PHASE-2.md pour configuration et limites.
-3. Revendication SIRET et contrôle administrateur, espace propriétaire, gestion menus/photos/horaires et stockage S3.
+3. Implémenté : revendication SIRET/code e-mail et contrôle administrateur, espace propriétaire `/pro`, gestion menus/photos/horaires, CSV, plats à la une, statistiques agrégées et démo autonome. Voir PHASE-3.md pour les limites et configurations réelles.
 4. Réservations transactionnelles, capacités par créneau, concurrence, annulations, calendrier, export CSV, confirmations et rappels Resend.
 5. Stripe, webhooks idempotents, abonnements, frais par couvert, placements explicitement sponsorisés et plafonnés, revenus administrateur.
 6. CGU/CGV et confidentialité en brouillon juridique, consentement, export/suppression RGPD, captcha, limites distribuées, accessibilité et Lighthouse, cache hors-ligne PWA, déploiement Vercel/PostgreSQL.

@@ -35,22 +35,27 @@ export default function Analytics({
         brute ou profil visiteur enregistré ; les requêtes répétées et robots
         peuvent compter.
       </p>
-      <div
-        className="analytics-chart"
-        role="img"
-        aria-label={`Vues quotidiennes sur ${days} jours`}
-      >
-        {rows.map((r) => (
-          <div key={r.day}>
-            <span
-              style={{ height: `${Math.max(2, (r.views / max) * 100)}px` }}
-            />
-            <small>
-              {r.day.slice(5)} : {r.views}
-            </small>
-          </div>
-        ))}
-      </div>
+      {!!rows.length && (
+        <div
+          className="analytics-chart"
+          role="img"
+          aria-label={`Vues quotidiennes sur ${days} jours`}
+        >
+          {rows.map((r) => (
+            <div key={r.day}>
+              <span
+                style={{ height: `${Math.max(2, (r.views / max) * 100)}px` }}
+              />
+              <small>
+                {r.day.slice(5)} : {r.views}
+              </small>
+            </div>
+          ))}
+        </div>
+      )}
+      {!rows.length && (
+        <p className="notice">Aucune activité enregistrée sur cette période.</p>
+      )}
       <table className="analytics-table">
         <caption>Détails des vues et clics quotidiens</caption>
         <thead>
@@ -77,6 +82,30 @@ export default function Analytics({
         </tbody>
       </table>
       <h3>Évolution des avis publiés</h3>
+      {!!data.trend.length && (
+        <svg
+          viewBox="0 0 300 120"
+          width="300"
+          height="120"
+          role="img"
+          aria-label="Tendance des notes publiées"
+        >
+          <polyline
+            fill="none"
+            stroke="#69763a"
+            strokeWidth="3"
+            points={data.trend
+              .slice()
+              .sort((a, b) => a.day.localeCompare(b.day))
+              .filter((r) => r.day >= from)
+              .map(
+                (r, i, all) =>
+                  `${10 + (i * 280) / Math.max(1, all.length - 1)},${110 - r.rating * 20}`,
+              )
+              .join(" ")}
+          />
+        </svg>
+      )}
       {data.trend
         .filter((r) => r.day >= from)
         .map((r) => (

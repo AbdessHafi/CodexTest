@@ -55,15 +55,19 @@ export async function preparePhotos(files: File[]) {
   }
   return images;
 }
-export async function storePhoto(body: Buffer) {
+export async function storePhoto(
+  body: Buffer,
+  prefix: "reviews" | "claims" | "venues" = "reviews",
+  contentType = "image/jpeg",
+) {
   const s3 = client();
-  const key = `reviews/${crypto.randomUUID()}.jpg`;
+  const key = `${prefix}/${crypto.randomUUID()}.${contentType === "application/pdf" ? "pdf" : "jpg"}`;
   await s3.send(
     new PutObjectCommand({
       Bucket: process.env.S3_BUCKET,
       Key: key,
       Body: body,
-      ContentType: "image/jpeg",
+      ContentType: contentType,
     }),
   );
   return key;

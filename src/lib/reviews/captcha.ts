@@ -1,6 +1,6 @@
 export async function verifyCaptcha(
   token: string,
-  action: "review" | "report",
+  action: "review" | "report" | "claim",
 ) {
   if (
     process.env.CAPTCHA_MODE === "disabled" &&

@@ -17,7 +17,10 @@
     "test:db": "tsx scripts/check-db.ts",
     "test:reviews:db": "vitest run --config vitest.db.config.ts",
     "test:e2e:reviews": "playwright test --config playwright.db.config.ts",
-    "security:secrets": "tsx scripts/check-secrets.ts"
+    "security:secrets": "tsx scripts/check-secrets.ts",
+    "db:seed:owner": "tsx scripts/seed-owner.ts",
+    "dev:owner-demo": "tsx scripts/dev-owner.ts",
+    "mail:flush": "tsx scripts/flush-mail.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1161.0",

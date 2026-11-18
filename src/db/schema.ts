@@ -10,6 +10,7 @@ import {
   uuid,
   date,
   unique,
+  uniqueIndex,
   index,
   check,
   customType,
@@ -57,6 +58,12 @@ export const venues = pgTable(
     price: integer("price").notNull(),
     tags: text("tags").array().notNull(),
     description: text("description").notNull(),
+    email: text("email").default("").notNull(),
+    phone: text("phone").default("").notNull(),
+    website: text("website").default("").notNull(),
+    instagram: text("instagram").default("").notNull(),
+    facebook: text("facebook").default("").notNull(),
+    types: text("types").array().default([]).notNull(),
     siret: text("siret").unique(),
     claimed: boolean("claimed").default(false).notNull(),
     source: text("source").default("DEMO").notNull(),
@@ -87,7 +94,12 @@ export const venueOwners = pgTable(
       .notNull(),
     status: text("status").default("PENDING").notNull(),
   },
-  (t) => [unique().on(t.userId, t.venueId)],
+  (t) => [
+    unique().on(t.userId, t.venueId),
+    uniqueIndex("one_approved_owner")
+      .on(t.venueId)
+      .where(sql`${t.status}='APPROVED'`),
+  ],
 );
 export const venueHours = pgTable(
   "venue_hours",
@@ -130,15 +142,29 @@ export const menuItems = pgTable(
     description: text("description").notNull(),
     price: integer("price").notNull(),
     tags: text("tags").array().default([]).notNull(),
+    specialDate: date("special_date"),
+    specialEndDate: date("special_end_date"),
+    featuredStart: date("featured_start"),
+    featuredEnd: date("featured_end"),
+    category: text("category").default("À la carte").notNull(),
+    position: integer("position").default(0).notNull(),
+    allergens: text("allergens").array().default([]).notNull(),
+    available: boolean("available").default(true).notNull(),
   },
   (t) => [check("menu_price", sql`${t.price} >= 0`)],
 );
 export const photos = pgTable("photos", {
+  position: integer("position").default(0).notNull(),
+  cover: boolean("cover").default(false).notNull(),
+  menuItemId: text("menu_item_id").references(() => menuItems.id, {
+    onDelete: "cascade",
+  }),
   id: id(),
   venueId: text("venue_id")
     .references(() => venues.id, { onDelete: "cascade" })
     .notNull(),
   key: text("key").notNull(),
+  thumbKey: text("thumb_key"),
   alt: text("alt").notNull(),
 });
 export const slots = pgTable(
@@ -311,4 +337,62 @@ export const abuseBuckets = pgTable("abuse_buckets", {
   key: text("key").primaryKey(),
   window: timestamp("window", { withTimezone: true }).notNull(),
   count: integer("count").notNull(),
+});
+
+export const venueClaims = pgTable(
+  "venue_claims",
+  {
+    id: id(),
+    venueId: text("venue_id")
+      .references(() => venues.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id")
+      .references(() => users.id)
+      .notNull(),
+    siret: text("siret").notNull(),
+    statement: text("statement").notNull(),
+    documentKey: text("document_key"),
+    documentType: text("document_type"),
+    businessEmail: text("business_email").notNull(),
+    phone: text("phone").notNull(),
+    applicantRole: text("applicant_role").notNull(),
+    codeHash: text("code_hash"),
+    codeExpires: timestamp("code_expires", { withTimezone: true }),
+    codeAttempts: integer("code_attempts").default(0).notNull(),
+    emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
+    status: text("status").default("PENDING").notNull(),
+    reason: text("reason"),
+    createdAt: created(),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("one_pending_claim")
+      .on(t.venueId)
+      .where(sql`${t.status}='PENDING'`),
+    index("claims_status_idx").on(t.status, t.createdAt),
+  ],
+);
+
+export const venueAnalytics = pgTable(
+  "venue_analytics",
+  {
+    venueId: text("venue_id")
+      .references(() => venues.id, { onDelete: "cascade" })
+      .notNull(),
+    day: date("day").notNull(),
+    views: integer("views").default(0).notNull(),
+    phone: integer("phone").default(0).notNull(),
+    website: integer("website").default(0).notNull(),
+    directions: integer("directions").default(0).notNull(),
+    favorites: integer("favorites").default(0).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.venueId, t.day] })],
+);
+export const mailOutbox = pgTable("mail_outbox", {
+  id: id(),
+  recipient: text("recipient").notNull(),
+  subject: text("subject").notNull(),
+  text: text("text").notNull(),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+  createdAt: created(),
 });

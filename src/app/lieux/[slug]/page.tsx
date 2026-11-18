@@ -1,5 +1,9 @@
+/* eslint-disable @next/next/no-img-element -- Public images use access-checked routes and no persistent optimizer cache. */
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { recordActivity } from "@/lib/owners/analytics";
+import { ActivityLink, FavoriteButton } from "@/components/owners/links";
+import { featuredMenuItem } from "@/lib/owners/policy";
 import { getVenue } from "@/lib/venues";
 import ReviewSection from "@/components/reviews/section";
 import { publishedReviews } from "@/lib/reviews/queries";
@@ -9,6 +13,7 @@ import {
   safeJson,
   slugify,
 } from "@/lib/seo";
+import { parisDate } from "@/lib/reviews/policy";
 import { isOpen } from "@/lib/search";
 export const dynamic = "force-dynamic";
 export async function generateMetadata({
@@ -22,7 +27,7 @@ export async function generateMetadata({
         `${v.name}, ${v.city}`,
         v.description,
         `/lieux/${v.slug}`,
-        v.source === "DEMO",
+        ["DEMO", "LOCAL_DEMO"].includes(v.source),
       )
     : { title: "Adresse introuvable", robots: { index: false } };
 }
@@ -43,6 +48,13 @@ export default async function VenuePage({
   const v = await getVenue((await params).slug);
   if (!v) notFound();
   const { summary } = await publishedReviews(v.id);
+  if (!["DEMO", "LOCAL_DEMO"].includes(v.source)) {
+    try {
+      await recordActivity(v.id, "views");
+    } catch {
+      /* Analytics must not make a venue unavailable. */
+    }
+  }
   return (
     <article className="detail">
       <script
@@ -64,7 +76,7 @@ export default async function VenuePage({
           {isOpen(v) ? "Ouvert maintenant" : "Actuellement fermé"}
         </span>
       </p>
-      {v.source === "DEMO" && (
+      {["DEMO", "LOCAL_DEMO"].includes(v.source) && (
         <p className="notice">
           Établissement fictif de démonstration. Les adresses, horaires et menus
           ne correspondent pas à un commerce réel.
@@ -77,13 +89,62 @@ export default async function VenuePage({
           l’établissement.
         </p>
       )}
-      <div
-        className="detail-hero"
-        role="img"
-        aria-label="Illustration d’une tasse de café"
-      >
-        ☕
+      {v.images?.some((p) => p.cover) && (
+        <img
+          className="venue-cover"
+          src={`/api/venues/${v.id}/photos/${v.images.find((p) => p.cover)!.id}`}
+          alt={v.images.find((p) => p.cover)!.alt}
+          width={1000}
+          height={450}
+        />
+      )}
+      {!v.images?.some((p) => p.cover) && (
+        <div
+          className="detail-hero"
+          role="img"
+          aria-label="Illustration d’une tasse de café"
+        >
+          ☕
+        </div>
+      )}
+      {!!v.images?.filter((p) => !p.menuItemId).length && (
+        <div className="venue-gallery">
+          {v.images
+            .filter((p) => !p.menuItemId)
+            .map((p) => (
+              <img
+                key={p.id}
+                src={`/api/venues/${v.id}/photos/${p.id}`}
+                alt={p.alt}
+                width={280}
+                height={210}
+                loading="lazy"
+              />
+            ))}
+        </div>
+      )}
+      <div className="owner-actions">
+        {v.phone && (
+          <ActivityLink
+            id={v.id}
+            kind="phone"
+            href={`tel:${v.phone.replace(/[^+0-9]/g, "")}`}
+          >
+            Appeler l’établissement
+          </ActivityLink>
+        )}
+        {v.website && (
+          <ActivityLink id={v.id} kind="website" href={v.website}>
+            Site web
+          </ActivityLink>
+        )}
+        {v.email && <a href={`mailto:${v.email}`}>E-mail</a>}
+        {v.instagram && <a href={v.instagram}>Instagram</a>}
+        {v.facebook && <a href={v.facebook}>Facebook</a>}
       </div>
+      {!["DEMO", "LOCAL_DEMO"].includes(v.source) && (
+        <FavoriteButton id={v.id} />
+      )}
       <div className="detail-columns">
         <div>
           <section>
@@ -97,19 +158,54 @@ export default async function VenuePage({
           </section>
           <section>
             <h2>À la carte</h2>
+            {v.menu
+              .filter((m) => featuredMenuItem(m, parisDate()))
+              .map((m) => (
+                <div className="featured-dish" key={m.id || m.name}>
+                  <strong>À la une : {m.name}</strong>
+                  <p>{m.description}</p>
+                </div>
+              ))}
             {v.menu.length ? (
-              v.menu.map((m) => (
-                <div className="menu-item" key={m.name}>
-                  <div>
-                    <strong>{m.name}</strong>
-                    <p>{m.description}</p>
+              v.menu.map((m, i) => (
+                <div key={m.id || m.name}>
+                  {m.category &&
+                    m.category !== "À la carte" &&
+                    (i === 0 || v.menu[i - 1].category !== m.category) && (
+                      <h3 className="menu-category">
+                        {m.category || "À la carte"}
+                      </h3>
+                    )}
+                  <div className="menu-item">
+                    <div>
+                      <strong>{m.name}</strong>
+                      {m.specialDate && <p>Plat du jour</p>}
+                      {v.images
+                        ?.filter((p) => p.menuItemId === m.id)
+                        .map((p) => (
+                          <img
+                            className="menu-image"
+                            key={p.id}
+                            src={`/api/venues/${v.id}/photos/${p.id}`}
+                            alt={p.alt}
+                            width={160}
+                            height={120}
+                            loading="lazy"
+                          />
+                        ))}
+                      <p>{m.description}</p>
+                      {!!m.tags?.length && <p>{m.tags.join(" · ")}</p>}
+                      {!!m.allergens?.length && (
+                        <p>Allergènes : {m.allergens.join(", ")}</p>
+                      )}
+                    </div>
+                    <span>
+                      {new Intl.NumberFormat("fr-FR", {
+                        style: "currency",
+                        currency: "EUR",
+                      }).format(m.price / 100)}
+                    </span>
                   </div>
-                  <span>
-                    {new Intl.NumberFormat("fr-FR", {
-                      style: "currency",
-                      currency: "EUR",
-                    }).format(m.price / 100)}
-                  </span>
                 </div>
               ))
             ) : (
@@ -124,14 +220,13 @@ export default async function VenuePage({
               <br />
               {v.neighborhood}, {v.city}
             </p>
-            <a
+            <ActivityLink
+              id={v.id}
+              kind="directions"
               href={`https://www.openstreetmap.org/?mlat=${v.latitude}&mlon=${v.longitude}#map=16/${v.latitude}/${v.longitude}`}
-              target="_blank"
-              rel="noreferrer"
-              className="breadcrumb"
             >
               Voir l’emplacement sur OpenStreetMap ↗
-            </a>
+            </ActivityLink>
           </section>
         </div>
         <aside>
@@ -152,15 +247,32 @@ export default async function VenuePage({
             <p>Horaires non renseignés.</p>
           )}
           <p className="demo-note">Horaires en heure de Paris.</p>
+          {v.exceptions
+            ?.filter((e) => e.date >= parisDate())
+            .sort((a, b) => a.date.localeCompare(b.date))
+            .map((e) => (
+              <div className="hours" key={e.date}>
+                <span>{e.date}</span>
+                <span>
+                  {e.closed
+                    ? "Fermeture exceptionnelle"
+                    : `${e.open} – ${e.close}`}
+                </span>
+              </div>
+            ))}
           <p className="notice">
             Les réservations en ligne arrivent bientôt. Aucun créneau n’est
             réservable actuellement.
           </p>
+          {v.claimed && <p className="notice">Établissement vérifié</p>}
           {!v.claimed && (
             <>
               <h3>Vous êtes chez vous ici ?</h3>
               <p>Cette fiche n’a pas encore été revendiquée.</p>
-              <Link href="/professionnels" className="primary">
+              <Link
+                href={`/professionnels/revendiquer/${v.slug}`}
+                className="primary"
+              >
                 Revendiquer cette fiche
               </Link>
             </>

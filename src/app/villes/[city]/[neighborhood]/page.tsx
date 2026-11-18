@@ -27,7 +27,7 @@ export async function generateMetadata({
     `Meilleurs brunchs à ${place(rows[0])}`,
     `Trouvez votre prochain brunch ou café à ${place(rows[0])} : cartes, horaires et avis.`,
     `/villes/${city}/${neighborhood}`,
-    rows.every((v) => v.source === "DEMO"),
+    rows.every((v) => ["DEMO", "LOCAL_DEMO"].includes(v.source)),
   );
 }
 export default async function Neighborhood({

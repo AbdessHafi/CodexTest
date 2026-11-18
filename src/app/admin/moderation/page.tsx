@@ -39,6 +39,9 @@ export default async function Moderation() {
     <div className="content-page">
       <span className="eyebrow">ADMINISTRATION</span>
       <h1>Modération des avis</h1>
+      <a className="breadcrumb" href="/admin/revendications">
+        Examiner les revendications →
+      </a>
       <p>
         {queue.length} avis en attente ou signalés (100 maximum, plus récents
         d’abord).

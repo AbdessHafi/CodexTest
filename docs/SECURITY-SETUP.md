@@ -37,3 +37,16 @@ Le brouillon d’environnement cloud concerne uniquement Codex. Le développemen
 L’utilisateur a explicitement autorisé la gestion Supabase. Aucun connecteur Supabase ni navigateur pilotable n’est disponible dans cette session : sa connexion dans son propre navigateur n’est pas partagée avec l’environnement. Le brouillon Codex déclare maintenant un secret personnel `SUPABASE_ACCESS_TOKEN` pour `api.supabase.com`, et l’accès réseau à `api.github.com`. L’ajout du secret a automatiquement ajouté `api.supabase.com` aux domaines du brouillon. Ce sont des exigences sans valeur secrète, pas une preuve d’accès opérationnel.
 
 Pour donner cet accès : créer un jeton dans Supabase → Account → Access Tokens, le saisir dans le champ sécurisé `SUPABASE_ACCESS_TOKEN` des paramètres de l’environnement Codex, puis enregistrer et publier la configuration. Ne pas transmettre le jeton dans le chat. Recontrôler ensuite l’accès API, les organisations et projets existants avant de créer un projet pour éviter les doublons. Cette configuration cloud n’est utile que pour déléguer la gestion à Codex ; un usage local autonome sur Mac n’en dépend pas.
+
+## Phase 3 — ajout des propriétaires
+
+La phase 3 ajoute codes e-mail, preuves privées, gestion propriétaire et statistiques. Voir [PHASE-3.md](PHASE-3.md) pour les variables, la rétention et les tests.
+
+- `CLAIM_CODE_SECRET` (32 caractères aléatoires minimum) et `RESEND_API_KEY` restent exclusivement côté serveur ; l’expéditeur `MAIL_FROM` doit être validé chez Resend.
+- Les preuves sont facultatives, privées, consultables seulement par auteur/admin avec lien applicatif signé de 15 minutes et session ; aucune liste S3 ou clé d’objet n’est publique. Les PDF sont téléchargés avec sandbox/nosniff, sans revendication d’analyse antivirus.
+- Les codes sont hachés par HMAC, expirent en 15 minutes et sont bloqués au cinquième essai. Les renvois ne remettent pas les essais à zéro. Les notifications hors code sont transactionnelles puis reprises via `npm run mail:flush`.
+- Un propriétaire approuvé ne peut manipuler que ses établissements. Chaque mutation relit rôle et liaison en base, contrôle l’origine, valide les données et écrit un audit. Un administrateur ne peut approuver sa propre demande.
+- `.local/` est ignoré par Git et contient exclusivement la démo locale (courriers avec codes fictifs et stockage). Le lanceur refuse une base distante et le fournisseur local refuse la production ; aucun bypass d’authentification n’est présent dans les routes applicatives.
+- Statistiques uniquement agrégées : pas d’IP brut ni cookie analytique. La relation d’un favori au compte est séparée de la table d’agrégats. Finaliser les notices et politiques de conservation avant de collecter des données réelles.
+
+La phase 2 a ensuite bien été poussée sur GitHub (`d2e1418` confirmé sur `main`). Les mentions de refus API plus haut décrivent l’état rencontré pendant sa préparation, pas un échec de sauvegarde définitif. La phase 3 est livrée par fusion Git sans dépendre d’une publication d’environnement cloud.

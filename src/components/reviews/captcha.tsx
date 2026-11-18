@@ -14,7 +14,7 @@ export default function Captcha({
   action,
   onToken,
 }: {
-  action: "review" | "report";
+  action: "review" | "report" | "claim";
   onToken: (token: string) => void;
 }) {
   const container = useRef<HTMLDivElement>(null);

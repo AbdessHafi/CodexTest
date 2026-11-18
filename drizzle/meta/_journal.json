@@ -15,6 +15,27 @@
       "when": 1793473294861,
       "tag": "0001_uneven_banshee",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795040689521,
+      "tag": "0002_overconfident_mandarin",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795041004644,
+      "tag": "0003_neat_guardsmen",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795041335826,
+      "tag": "0004_handy_cargill",
+      "breakpoints": true
     }
   ]
 }

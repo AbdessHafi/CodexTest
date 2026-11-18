@@ -17,7 +17,7 @@ export async function generateMetadata({
     `Meilleurs cafés et brunchs à ${venues[0].city}`,
     `Découvrez les cafés et brunchs de ${venues[0].city}, leurs menus, horaires et avis.`,
     `/villes/${city}`,
-    venues.every((v) => v.source === "DEMO"),
+    venues.every((v) => ["DEMO", "LOCAL_DEMO"].includes(v.source)),
   );
 }
 export default async function City({

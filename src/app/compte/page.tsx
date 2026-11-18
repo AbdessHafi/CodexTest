@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { authConfigured, supabase } from "@/lib/auth";
 export const dynamic = "force-dynamic";
@@ -16,6 +17,9 @@ export default async function Account() {
         Vos favoris, listes et réservations seront disponibles dans les
         prochaines phases.
       </p>
+      <Link className="primary" href="/professionnels">
+        Mon espace professionnel
+      </Link>
       <form action="/api/auth/logout" method="post">
         <button className="primary">Se déconnecter</button>
       </form>

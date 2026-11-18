@@ -27,7 +27,9 @@ export default function SeoList({ venues }: { venues: Venue[] }) {
               {v.type} · {"€".repeat(v.price)} · {v.neighborhood}
             </p>
             <p>{v.description}</p>
-            {v.source === "DEMO" && <small>Lieu fictif de démonstration</small>}
+            {["DEMO", "LOCAL_DEMO"].includes(v.source) && (
+              <small>Lieu fictif de démonstration</small>
+            )}
           </Link>
         ))}
       </div>

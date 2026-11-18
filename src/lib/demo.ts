@@ -13,8 +13,41 @@ export type Venue = {
   description: string;
   source: string;
   claimed: boolean;
+  email?: string;
+  phone?: string;
+  website?: string;
+  instagram?: string;
+  facebook?: string;
+  types?: string[];
   photo: number;
-  menu: { name: string; price: number; description: string }[];
+  menu: {
+    id?: string;
+    name: string;
+    price: number;
+    description: string;
+    tags?: string[];
+    specialDate?: string | null;
+    specialEndDate?: string | null;
+    featuredStart?: string | null;
+    featuredEnd?: string | null;
+    category?: string;
+    allergens?: string[];
+    available?: boolean;
+    position?: number;
+  }[];
+  images?: {
+    id: string;
+    alt: string;
+    menuItemId: string | null;
+    cover?: boolean;
+    position?: number;
+  }[];
+  exceptions?: {
+    date: string;
+    closed: boolean;
+    open: string | null;
+    close: string | null;
+  }[];
   hours: { day: number; open: string; close: string }[];
 };
 const cities = [

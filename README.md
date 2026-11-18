@@ -1,4 +1,4 @@
-# Pause Café — phases 1 et 2
+# Pause Café — phases 1 à 3
 
 Marketplace française de cafés et brunchs. Next.js App Router + TypeScript + Tailwind 4, PostgreSQL/PostGIS + Drizzle, Supabase Auth, MapLibre/OpenStreetMap, next-intl (français, EUR, Europe/Paris).
 
@@ -80,8 +80,14 @@ Les commandes ci-dessus sont exécutées dans le checkout existant : chaque tâc
 
 ## État et suite
 
-Phase 1 implémentée et commitée séparément. L’authentification réelle reste dépendante de la configuration Supabase/Google/Apple ; aucun secret n’est commité. Les avis et leur modération sont implémentés en phase 2, avec services Auth/CAPTCHA/S3 à configurer pour une utilisation réelle. Paiements, réservations et revendication restent dans les phases suivantes. Aucun déploiement/publication effectué. Les pages juridiques, le consentement et le durcissement seront nécessaires avant une ouverture au public.
+Phase 1 implémentée et commitée séparément. L’authentification réelle reste dépendante de la configuration Supabase/Google/Apple ; aucun secret n’est commité. Les avis et leur modération sont implémentés en phase 2, avec services Auth/CAPTCHA/S3 à configurer pour une utilisation réelle. La revendication est implémentée en phase 3 ; paiements et réservations restent dans les phases suivantes. Aucun déploiement/publication effectué. Les pages juridiques, le consentement et le durcissement seront nécessaires avant une ouverture au public.
 
-Voir [docs/ROADMAP.md](docs/ROADMAP.md). Voir [docs/PHASE-2.md](docs/PHASE-2.md) pour les avis, la modération, les photos privées, le CAPTCHA et le SEO. Prochaine phase : revendication et tableau de bord propriétaire, après le bilan de phase 2.
+Voir [docs/ROADMAP.md](docs/ROADMAP.md). Voir [docs/PHASE-2.md](docs/PHASE-2.md) pour les avis, la modération, les photos privées, le CAPTCHA et le SEO. La phase 3 ajoute la revendication et le tableau de bord propriétaire ; la phase 4 (réservations) attend la validation de cette livraison.
 
 [Préparation Supabase et sécurisation du dépôt](docs/SECURITY-SETUP.md).
+
+## Phase 3 : propriétaires
+
+La branche `phase-3` ajoute revendication avec code e-mail, validation administrateur, `/pro`, gestion de fiche/horaires/photos, carte avancée et CSV, plats du jour/à la une et statistiques agrégées. [Configuration, tests et limites](docs/PHASE-3.md).
+
+Après migration locale, `npm run dev:owner-demo` démarre des identités et un stockage fictifs sur boucle locale, sans Supabase, S3 ou Resend externes. `npm run db:seed:owner` prépare uniquement les fixtures. Ne pas exposer ce mode sur Internet. Le mode normal nécessite toujours les vrais services configurés. Les nouvelles variables sont dans `.env.example`. Planifier `npm run mail:flush` en production pour les notifications en attente.

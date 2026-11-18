@@ -82,15 +82,13 @@ export async function submitReview(
         })
         .returning();
       if (objectKeys.length)
-        await tx
-          .insert(reviewPhotos)
-          .values(
-            objectKeys.map((objectKey, i) => ({
-              reviewId: review.id,
-              objectKey,
-              alt: `Photo de la visite ${i + 1}`,
-            })),
-          );
+        await tx.insert(reviewPhotos).values(
+          objectKeys.map((objectKey, i) => ({
+            reviewId: review.id,
+            objectKey,
+            alt: `Photo de la visite ${i + 1}`,
+          })),
+        );
       return review;
     });
   } catch (error) {
@@ -200,19 +198,17 @@ export async function moderateReview(
       .where(
         and(eq(reportFlags.targetId, id), eq(reportFlags.status, "PENDING")),
       );
-    await tx
-      .insert(auditLogs)
-      .values({
-        actorId: user.id,
-        action: `REVIEW_${action}`,
-        targetId: id,
-        metadata: {
-          reason,
-          before: review.status,
-          after: next,
-          reportIds: flags.map((f) => f.id),
-        },
-      });
+    await tx.insert(auditLogs).values({
+      actorId: user.id,
+      action: `REVIEW_${action}`,
+      targetId: id,
+      metadata: {
+        reason,
+        before: review.status,
+        after: next,
+        reportIds: flags.map((f) => f.id),
+      },
+    });
   });
 }
 export async function moderationQueue() {

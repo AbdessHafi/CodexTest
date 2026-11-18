@@ -18,6 +18,21 @@ export function isOpen(venue: Venue, now = new Date()) {
   );
   const h = venue.hours.find((h) => h.day === day);
   const time = `${get("hour")}:${get("minute")}`;
+  const date = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+  const exception = venue.exceptions?.find((e) => e.date === date);
+  if (exception)
+    return (
+      !exception.closed &&
+      !!exception.open &&
+      !!exception.close &&
+      exception.open <= time &&
+      time < exception.close
+    );
   return !!h && h.open <= time && time < h.close;
 }
 export function distance(a: { lat: number; lng: number }, b: Venue) {

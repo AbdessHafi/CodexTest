@@ -14,7 +14,21 @@ export type Venue = {
   source: string;
   claimed: boolean;
   photo: number;
-  menu: { name: string; price: number; description: string }[];
+  menu: {
+    id?: string;
+    name: string;
+    price: number;
+    description: string;
+    tags?: string[];
+    specialDate?: string | null;
+  }[];
+  images?: { id: string; alt: string; menuItemId: string | null }[];
+  exceptions?: {
+    date: string;
+    closed: boolean;
+    open: string | null;
+    close: string | null;
+  }[];
   hours: { day: number; open: string; close: string }[];
 };
 const cities = [

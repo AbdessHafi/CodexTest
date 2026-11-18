@@ -62,8 +62,8 @@ export async function boundedBody(req: NextRequest, max: number) {
   }
   return result;
 }
-export async function jsonBody(req: NextRequest) {
-  const body = await boundedBody(req, 6000);
+export async function jsonBody(req: NextRequest, max = 6000) {
+  const body = await boundedBody(req, max);
   try {
     return JSON.parse(new TextDecoder().decode(body));
   } catch {

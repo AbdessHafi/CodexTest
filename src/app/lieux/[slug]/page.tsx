@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- Public images use access-checked routes and no persistent optimizer cache. */
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getVenue } from "@/lib/venues";
@@ -9,6 +10,7 @@ import {
   safeJson,
   slugify,
 } from "@/lib/seo";
+import { parisDate } from "@/lib/reviews/policy";
 import { isOpen } from "@/lib/search";
 export const dynamic = "force-dynamic";
 export async function generateMetadata({
@@ -84,6 +86,22 @@ export default async function VenuePage({
       >
         ☕
       </div>
+      {!!v.images?.filter((p) => !p.menuItemId).length && (
+        <div className="venue-gallery">
+          {v.images
+            .filter((p) => !p.menuItemId)
+            .map((p) => (
+              <img
+                key={p.id}
+                src={`/api/venues/${v.id}/photos/${p.id}`}
+                alt={p.alt}
+                width={280}
+                height={210}
+                loading="lazy"
+              />
+            ))}
+        </div>
+      )}
       <div className="detail-columns">
         <div>
           <section>
@@ -99,10 +117,25 @@ export default async function VenuePage({
             <h2>À la carte</h2>
             {v.menu.length ? (
               v.menu.map((m) => (
-                <div className="menu-item" key={m.name}>
+                <div className="menu-item" key={m.id || m.name}>
                   <div>
                     <strong>{m.name}</strong>
+                    {m.specialDate && <p>Plat du jour</p>}
+                    {v.images
+                      ?.filter((p) => p.menuItemId === m.id)
+                      .map((p) => (
+                        <img
+                          className="menu-image"
+                          key={p.id}
+                          src={`/api/venues/${v.id}/photos/${p.id}`}
+                          alt={p.alt}
+                          width={160}
+                          height={120}
+                          loading="lazy"
+                        />
+                      ))}
                     <p>{m.description}</p>
+                    {!!m.tags?.length && <p>{m.tags.join(" · ")}</p>}
                   </div>
                   <span>
                     {new Intl.NumberFormat("fr-FR", {
@@ -152,15 +185,34 @@ export default async function VenuePage({
             <p>Horaires non renseignés.</p>
           )}
           <p className="demo-note">Horaires en heure de Paris.</p>
+          {v.exceptions
+            ?.filter((e) => e.date >= parisDate())
+            .sort((a, b) => a.date.localeCompare(b.date))
+            .map((e) => (
+              <div className="hours" key={e.date}>
+                <span>{e.date}</span>
+                <span>
+                  {e.closed
+                    ? "Fermeture exceptionnelle"
+                    : `${e.open} – ${e.close}`}
+                </span>
+              </div>
+            ))}
           <p className="notice">
             Les réservations en ligne arrivent bientôt. Aucun créneau n’est
             réservable actuellement.
           </p>
+          {v.claimed && (
+            <p className="notice">Fiche gérée par un propriétaire validé.</p>
+          )}
           {!v.claimed && (
             <>
               <h3>Vous êtes chez vous ici ?</h3>
               <p>Cette fiche n’a pas encore été revendiquée.</p>
-              <Link href="/professionnels" className="primary">
+              <Link
+                href={`/professionnels/revendiquer/${v.slug}`}
+                className="primary"
+              >
                 Revendiquer cette fiche
               </Link>
             </>

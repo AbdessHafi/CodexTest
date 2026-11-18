@@ -1286,3 +1286,112 @@ footer small {
     grid-template-columns: 1fr;
   }
 }
+/* Professional workspace */
+.owner-editor section {
+  margin: 40px 0;
+  border-top: 1px solid #dddfd1;
+  padding-top: 30px;
+}
+.owner-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 24px 0;
+}
+.owner-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+.owner-form input,
+.owner-form textarea,
+.owner-form select {
+  background: white;
+  border: 1px solid #cdd0c1;
+  border-radius: 6px;
+  padding: 11px;
+  color: #272b21;
+  max-width: 100%;
+  min-width: 0;
+}
+.owner-form textarea {
+  min-height: 110px;
+}
+.owner-form fieldset {
+  border: 1px solid #dddfd1;
+  padding: 15px;
+  border-radius: 8px;
+}
+.owner-form .check-label {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+.owner-form input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.owner-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.hours-edit,
+.exception-edit {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #dddfd1;
+  padding-bottom: 15px;
+}
+.hours-edit > label:first-child {
+  min-width: 110px;
+}
+.menu-edit {
+  padding: 20px 0;
+  border-bottom: 1px solid #dddfd1;
+}
+.menu-edit summary,
+.owner-editor summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.owner-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+.owner-gallery img {
+  object-fit: cover;
+  border-radius: 8px;
+}
+.venue-gallery {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 25px 0;
+}
+.venue-gallery img,
+.menu-image {
+  object-fit: cover;
+  border-radius: 10px;
+  max-width: 100%;
+}
+.owner-form button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+@media (max-width: 620px) {
+  .owner-fields {
+    grid-template-columns: 1fr;
+  }
+  .hours-edit {
+    gap: 12px;
+  }
+  .hours-edit > label:first-child {
+    width: 100%;
+  }
+}

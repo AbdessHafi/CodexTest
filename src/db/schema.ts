@@ -10,6 +10,7 @@ import {
   uuid,
   date,
   unique,
+  uniqueIndex,
   index,
   check,
   customType,
@@ -87,7 +88,12 @@ export const venueOwners = pgTable(
       .notNull(),
     status: text("status").default("PENDING").notNull(),
   },
-  (t) => [unique().on(t.userId, t.venueId)],
+  (t) => [
+    unique().on(t.userId, t.venueId),
+    uniqueIndex("one_approved_owner")
+      .on(t.venueId)
+      .where(sql`${t.status}='APPROVED'`),
+  ],
 );
 export const venueHours = pgTable(
   "venue_hours",
@@ -130,10 +136,14 @@ export const menuItems = pgTable(
     description: text("description").notNull(),
     price: integer("price").notNull(),
     tags: text("tags").array().default([]).notNull(),
+    specialDate: date("special_date"),
   },
   (t) => [check("menu_price", sql`${t.price} >= 0`)],
 );
 export const photos = pgTable("photos", {
+  menuItemId: text("menu_item_id").references(() => menuItems.id, {
+    onDelete: "cascade",
+  }),
   id: id(),
   venueId: text("venue_id")
     .references(() => venues.id, { onDelete: "cascade" })
@@ -312,3 +322,29 @@ export const abuseBuckets = pgTable("abuse_buckets", {
   window: timestamp("window", { withTimezone: true }).notNull(),
   count: integer("count").notNull(),
 });
+
+export const venueClaims = pgTable(
+  "venue_claims",
+  {
+    id: id(),
+    venueId: text("venue_id")
+      .references(() => venues.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id")
+      .references(() => users.id)
+      .notNull(),
+    siret: text("siret").notNull(),
+    statement: text("statement").notNull(),
+    documentKey: text("document_key").notNull(),
+    status: text("status").default("PENDING").notNull(),
+    reason: text("reason"),
+    createdAt: created(),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("one_pending_claim")
+      .on(t.userId, t.venueId)
+      .where(sql`${t.status}='PENDING'`),
+    index("claims_status_idx").on(t.status, t.createdAt),
+  ],
+);

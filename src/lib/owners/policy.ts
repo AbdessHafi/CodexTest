@@ -23,6 +23,9 @@ export const claimInput = z
         validSiret,
         "SIRET invalide : 14 chiffres et clé de contrôle attendus.",
       ),
+    businessEmail: z.email().max(254),
+    phone: z.string().regex(/^\+?[0-9 .()-]{8,25}$/),
+    applicantRole: z.enum(["owner", "manager"]),
     statement: z.string().trim().min(20).max(2000),
     captchaToken: z.string().max(2048).default(""),
   })
@@ -60,10 +63,53 @@ const exception = z
     (v) => v.closed || !!(v.open && v.close && v.open < v.close),
     "Renseignez un créneau valide pour une ouverture exceptionnelle.",
   );
+const cleanText = (min: number, max: number) =>
+  z
+    .string()
+    .trim()
+    .min(min)
+    .max(max)
+    .refine(
+      (v) => !/[<>]/.test(v),
+      "Utilisez du texte simple, sans balises HTML.",
+    );
+const safeUrl = z.union([
+  z.literal(""),
+  z
+    .url()
+    .max(300)
+    .refine((v) => {
+      const u = new URL(v);
+      return u.protocol === "https:" && !u.username && !u.password;
+    }, "Une URL HTTPS est attendue."),
+]);
 export const profileInput = z
   .object({
     name: z.string().trim().min(2).max(120),
-    description: z.string().trim().min(20).max(3000),
+    description: cleanText(20, 3000),
+    email: z.union([z.literal(""), z.email().max(254)]).default(""),
+    phone: z
+      .union([z.literal(""), z.string().regex(/^\+?[0-9 .()-]{8,25}$/)])
+      .default(""),
+    website: safeUrl.default(""),
+    instagram: safeUrl
+      .refine(
+        (v) =>
+          !v ||
+          ["instagram.com", "www.instagram.com"].includes(new URL(v).hostname),
+      )
+      .default(""),
+    facebook: safeUrl
+      .refine(
+        (v) =>
+          !v ||
+          ["facebook.com", "www.facebook.com"].includes(new URL(v).hostname),
+      )
+      .default(""),
+    types: z
+      .array(z.string().refine((v) => venueTypes.includes(v)))
+      .max(4)
+      .default([]),
     address: z.string().trim().min(5).max(200),
     city: z.string().trim().min(2).max(100),
     neighborhood: z.string().trim().max(100),
@@ -92,13 +138,53 @@ export const scheduleInput = z
 export const menuInput = z
   .object({
     name: z.string().trim().min(2).max(120),
-    description: z.string().trim().max(1000),
+    description: cleanText(0, 1000),
+    category: cleanText(1, 80).default("À la carte"),
+    allergens: z.array(cleanText(1, 40)).max(20).default([]),
+    available: z.boolean().default(true),
+    specialEndDate: z.iso.date().nullable().default(null),
+    featuredStart: z.iso.date().nullable().default(null),
+    featuredEnd: z.iso.date().nullable().default(null),
     price: z.number().int().min(0).max(1000000),
     tags: z.array(z.string().trim().min(1).max(40)).max(12),
     specialDate: z.iso.date().nullable().default(null),
   })
-  .strict();
+  .strict()
+  .refine(
+    (v) =>
+      (!v.specialEndDate ||
+        (!!v.specialDate && v.specialDate <= v.specialEndDate)) &&
+      ((!v.featuredStart && !v.featuredEnd) ||
+        (!!v.featuredStart &&
+          !!v.featuredEnd &&
+          v.featuredStart <= v.featuredEnd)),
+    "Vérifiez les dates de début et de fin.",
+  );
 export const ownerCommand = z.discriminatedUnion("action", [
+  z
+    .object({
+      action: z.literal("menu-import"),
+      items: z.array(menuInput).min(1).max(100),
+    })
+    .strict(),
+  z
+    .object({
+      action: z.literal("menu-order"),
+      ids: z.array(z.string().min(1).max(100)).max(100),
+    })
+    .strict(),
+  z
+    .object({
+      action: z.literal("photo-order"),
+      ids: z.array(z.string().min(1).max(100)).max(20),
+    })
+    .strict(),
+  z
+    .object({
+      action: z.literal("photo-cover"),
+      photoId: z.string().min(1).max(100),
+    })
+    .strict(),
   z.object({ action: z.literal("profile"), data: profileInput }).strict(),
   z.object({ action: z.literal("schedule"), data: scheduleInput }).strict(),
   z.object({ action: z.literal("menu-create"), data: menuInput }).strict(),
@@ -122,3 +208,29 @@ export const ownerCommand = z.discriminatedUnion("action", [
     })
     .strict(),
 ]);
+export function visibleMenuItem(
+  item: {
+    available: boolean;
+    specialDate: string | null;
+    specialEndDate: string | null;
+  },
+  today: string,
+) {
+  return (
+    item.available &&
+    (!item.specialDate ||
+      (item.specialDate <= today &&
+        today <= (item.specialEndDate || item.specialDate)))
+  );
+}
+export function featuredMenuItem(
+  item: { featuredStart?: string | null; featuredEnd?: string | null },
+  today: string,
+) {
+  return (
+    !!item.featuredStart &&
+    !!item.featuredEnd &&
+    item.featuredStart <= today &&
+    today <= item.featuredEnd
+  );
+}

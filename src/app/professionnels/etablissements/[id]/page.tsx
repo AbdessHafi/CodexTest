@@ -1,3 +1,6 @@
+import { ownerAnalytics } from "@/lib/owners/analytics";
+import Analytics from "@/components/owners/analytics";
+import { publishedReviews } from "@/lib/reviews/queries";
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { authConfigured, requireRole } from "@/lib/auth";
@@ -25,6 +28,9 @@ export default async function Dashboard({
       notFound();
     throw e;
   }
+  const stats = await ownerAnalytics(user, data.venue.id);
+  const community = await publishedReviews(data.venue.id);
+  const unanswered = community.items.filter((r) => !r.reply);
   return (
     <div className="content-page">
       <Link className="breadcrumb" href="/professionnels">
@@ -34,6 +40,22 @@ export default async function Dashboard({
       <Link href={`/lieux/${data.venue.slug}`} className="primary">
         Voir la fiche publique
       </Link>
+      <p className="notice">
+        Établissement vérifié · {community.summary.count} avis publié(s) ·{" "}
+        {community.summary.count
+          ? community.summary.average.toFixed(1) + " / 5"
+          : "Pas encore de note"}
+      </p>
+      <h2>Actions en attente</h2>
+      <p>{unanswered.length} avis sans réponse parmi les 50 plus récents.</p>
+      {unanswered.map((r) => (
+        <p key={r.id}>
+          <Link href={`/lieux/${data.venue.slug}#avis`}>
+            {r.text.slice(0, 100)} → Répondre
+          </Link>
+        </p>
+      ))}
+      <Analytics data={stats} />
       <OwnerEditor data={data} />
     </div>
   );

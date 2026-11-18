@@ -1,3 +1,7 @@
+import sharp from "sharp";
+import { revalidatePath } from "next/cache";
+import { ownerDashboard } from "@/lib/owners/service";
+import { exportMenuCsv } from "@/lib/owners/csv";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
@@ -18,6 +22,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   let key: string | undefined;
+  let thumbKey: string | undefined;
   try {
     sameOrigin(req);
     const user = await actor();
@@ -53,18 +58,56 @@ export async function POST(
         throw new ReviewError(400, "Une photo est requise.");
       const [image] = await preparePhotos([file]);
       key = await storePhoto(image, "venues");
-      await addVenuePhoto(user, id, key, input.data.alt, input.data.menuItemId);
+      thumbKey = await storePhoto(
+        await sharp(image)
+          .resize(320, 320, { fit: "inside", withoutEnlargement: true })
+          .jpeg({ quality: 75 })
+          .toBuffer(),
+        "venues",
+      );
+      await addVenuePhoto(
+        user,
+        id,
+        key,
+        input.data.alt,
+        input.data.menuItemId,
+        thumbKey,
+      );
+      thumbKey = undefined;
       key = undefined;
     } else {
-      const input = ownerCommand.safeParse(await jsonBody(req, 40000));
+      const input = ownerCommand.safeParse(await jsonBody(req, 200000));
       if (!input.success)
         throw new ReviewError(400, input.error.issues[0].message);
       const removed = await ownerEdit(user, id, input.data);
       await Promise.allSettled(removed.map(removePhoto));
     }
+    revalidatePath("/", "layout");
     return NextResponse.json({ ok: true });
   } catch (e) {
-    if (key) await Promise.allSettled([removePhoto(key)]);
+    if (key || thumbKey)
+      await Promise.allSettled(
+        [key, thumbKey].filter((k): k is string => !!k).map(removePhoto),
+      );
+    return failure(e);
+  }
+}
+
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const user = await actor();
+    const data = await ownerDashboard(user, (await params).id);
+    return new Response(exportMenuCsv(data.menu), {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": 'attachment; filename="menu.csv"',
+        "Cache-Control": "private, no-store",
+      },
+    });
+  } catch (e) {
     return failure(e);
   }
 }

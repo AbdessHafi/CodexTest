@@ -69,7 +69,9 @@ export function filterVenues(
         normalize(`${v.name} ${v.city} ${v.neighborhood}`).includes(
           normalize(filters.q),
         )) &&
-      (!filters.type || v.type === filters.type) &&
+      (!filters.type ||
+        v.type === filters.type ||
+        v.types?.includes(filters.type)) &&
       (!filters.price || v.price <= filters.price) &&
       (!filters.open || isOpen(v, now)) &&
       (filters.tags ?? []).every((t) => v.tags.includes(t)),

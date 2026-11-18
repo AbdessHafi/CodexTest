@@ -4,7 +4,15 @@ import { ReviewError } from "./http";
 // Atomic durable window shared by all application instances. Keyed by validated identity, never client IP headers.
 export async function reviewLimit(
   userId: string,
-  action: "review" | "report" | "reply" | "moderate" | "claim" | "owner",
+  action:
+    | "review"
+    | "report"
+    | "reply"
+    | "moderate"
+    | "claim-code"
+    | "claim-resend"
+    | "claim"
+    | "owner",
 ) {
   const window = new Date(Math.floor(Date.now() / 900000) * 900000);
   const key = `${action}:${userId}`;

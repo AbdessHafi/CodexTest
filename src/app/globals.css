@@ -1395,3 +1395,5 @@ footer small {
     width: 100%;
   }
 }
+.analytics-chart{display:flex;align-items:end;gap:8px;min-height:140px;overflow:auto}.analytics-chart>div{min-width:50px;display:flex;flex-direction:column;gap:5px}.analytics-chart span{background:#69763a;width:25px;display:block}.analytics-chart small{font-size:9px}.analytics-table{font-size:11px;border-collapse:collapse;display:block;overflow:auto;margin:25px 0}.analytics-table td,.analytics-table th{border:1px solid #d7dccb;padding:8px}.order-list{list-style:none;padding:0}.order-list li{padding:12px;border:1px solid #d7dccb;margin:6px 0;display:flex;gap:14px;align-items:center}.order-list button{border:1px solid #ccd1c1;padding:8px;border-radius:4px}.featured-dish{background:#eef0e5;border-left:4px solid #69763a;padding:18px}.menu-category{font-size:22px;margin:20px 0}.owner-actions{display:flex;gap:15px;flex-wrap:wrap;margin:20px 0}
+.venue-cover{width:100%;height:350px;object-fit:cover;border-radius:14px;margin:25px 0}@media(max-width:620px){.venue-cover{height:220px}}

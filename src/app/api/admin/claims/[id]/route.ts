@@ -1,3 +1,5 @@
+import { revalidatePath } from "next/cache";
+import { flushMail } from "@/lib/owners/mail";
 import { NextRequest, NextResponse } from "next/server";
 import {
   actor,
@@ -23,7 +25,9 @@ export async function POST(
     if (!parsed.success)
       throw new ReviewError(400, parsed.error.issues[0].message);
     await decideClaim(user, (await params).id, parsed.data);
-    return NextResponse.json({ ok: true });
+    revalidatePath("/", "layout");
+    const delivery = await flushMail();
+    return NextResponse.json({ ok: true, delivery });
   } catch (e) {
     return failure(e);
   }

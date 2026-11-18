@@ -13,6 +13,12 @@ export type Venue = {
   description: string;
   source: string;
   claimed: boolean;
+  email?: string;
+  phone?: string;
+  website?: string;
+  instagram?: string;
+  facebook?: string;
+  types?: string[];
   photo: number;
   menu: {
     id?: string;
@@ -21,8 +27,21 @@ export type Venue = {
     description: string;
     tags?: string[];
     specialDate?: string | null;
+    specialEndDate?: string | null;
+    featuredStart?: string | null;
+    featuredEnd?: string | null;
+    category?: string;
+    allergens?: string[];
+    available?: boolean;
+    position?: number;
   }[];
-  images?: { id: string; alt: string; menuItemId: string | null }[];
+  images?: {
+    id: string;
+    alt: string;
+    menuItemId: string | null;
+    cover?: boolean;
+    position?: number;
+  }[];
   exceptions?: {
     date: string;
     closed: boolean;

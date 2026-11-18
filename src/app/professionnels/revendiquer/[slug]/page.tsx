@@ -39,7 +39,7 @@ export default async function Claim({
       ) : (
         <>
           <p>
-            SIRET et justificatif obligatoires. La vérification du registre et
+            SIRET, e-mail professionnel et téléphone obligatoires ; justificatif PDF/JPG facultatif. La vérification du registre et
             de votre habilitation est manuelle. Aucune modification de la fiche
             ne sera possible avant validation.
           </p>

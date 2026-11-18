@@ -1,3 +1,4 @@
+import { proofUrl } from "@/lib/owners/proof";
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { authConfigured, requireRole } from "@/lib/auth";
@@ -10,7 +11,8 @@ export const metadata = {
 };
 export default async function Claims() {
   if (!authConfigured()) redirect("/connexion");
-  if (!(await requireRole(["ADMIN"]))) notFound();
+  const user = await requireRole(["ADMIN"]);
+  if (!user) notFound();
   const items = await pendingClaims();
   return (
     <div className="content-page">
@@ -36,13 +38,15 @@ export default async function Claims() {
             SIRET déclaré : <strong>{c.siret}</strong>
           </p>
           <p className="review-text">{c.statement}</p>
-          <a
-            href={`/api/claims/${c.id}/document`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Consulter le justificatif privé
-          </a>
+          <p>
+            E-mail vérifié : {c.businessEmail} · Téléphone : {c.phone} ·
+            Fonction : {c.applicantRole}
+          </p>
+          {c.documentKey && (
+            <a href={proofUrl(c.id, user.id)} target="_blank" rel="noreferrer">
+              Consulter le justificatif privé
+            </a>
+          )}
           <ClaimDecisionForm id={c.id} />
         </article>
       ))}

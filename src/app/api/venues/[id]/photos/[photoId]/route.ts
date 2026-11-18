@@ -15,7 +15,11 @@ export async function GET(
       .from(photos)
       .where(and(eq(photos.id, photoId), eq(photos.venueId, id)));
     if (!photo) throw new ReviewError(404, "Photo introuvable.");
-    const file = await readPhoto(photo.key);
+    const file = await readPhoto(
+      _req.nextUrl.searchParams.get("size") === "thumb" && photo.thumbKey
+        ? photo.thumbKey
+        : photo.key,
+    );
     if (!file.Body) throw new ReviewError(404, "Photo introuvable.");
     return new Response(file.Body.transformToWebStream() as ReadableStream, {
       headers: {

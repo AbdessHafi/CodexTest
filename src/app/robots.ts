@@ -12,6 +12,7 @@ export default function robots(): MetadataRoute.Robots {
         "/connexion",
         "/auth/",
         "/professionnels/",
+        "/pro",
       ],
     },
     sitemap: `${siteUrl()}/sitemap.xml`,

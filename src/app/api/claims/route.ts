@@ -1,3 +1,4 @@
+import { prepareProof } from "@/lib/owners/proof";
 import { NextRequest, NextResponse } from "next/server";
 import {
   actor,
@@ -10,7 +11,7 @@ import { claimInput } from "@/lib/owners/policy";
 import { submitClaim } from "@/lib/owners/service";
 import { reviewLimit } from "@/lib/reviews/limit";
 import { verifyCaptcha } from "@/lib/reviews/captcha";
-import { preparePhotos, storePhoto, removePhoto } from "@/lib/reviews/storage";
+import { storePhoto, removePhoto } from "@/lib/reviews/storage";
 export async function POST(req: NextRequest) {
   let key: string | undefined;
   try {
@@ -39,11 +40,18 @@ export async function POST(req: NextRequest) {
     if (!(await verifyCaptcha(parsed.data.captchaToken, "claim")))
       throw new ReviewError(400, "Vérification anti-robot requise.");
     const file = form.get("document");
-    if (!(file instanceof File) || form.getAll("document").length !== 1)
-      throw new ReviewError(400, "Un justificatif image est obligatoire.");
-    const [image] = await preparePhotos([file]);
-    key = await storePhoto(image, "claims");
-    const claim = await submitClaim(user, parsed.data, key);
+    let documentType: string | null = null;
+    if (file instanceof File && file.size) {
+      const proof = await prepareProof(file);
+      documentType = proof.type;
+      key = await storePhoto(proof.body, "claims", proof.type);
+    }
+    const claim = await submitClaim(
+      user,
+      parsed.data,
+      key || null,
+      documentType,
+    );
     return NextResponse.json(claim, { status: 201 });
   } catch (e) {
     if (key) await Promise.allSettled([removePhoto(key)]);

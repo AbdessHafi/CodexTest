@@ -1,3 +1,5 @@
+import { proofUrl } from "@/lib/owners/proof";
+import { CodeVerification } from "@/components/owners/forms";
 import Link from "next/link";
 import { authConfigured, requireRole } from "@/lib/auth";
 import { isDemo } from "@/lib/venues";
@@ -33,6 +35,8 @@ export default async function Professionals() {
             id: venueClaims.id,
             status: venueClaims.status,
             reason: venueClaims.reason,
+            verified: venueClaims.emailVerifiedAt,
+            document: venueClaims.documentKey,
             name: venues.name,
           })
           .from(venueClaims)
@@ -46,9 +50,9 @@ export default async function Professionals() {
       <span className="eyebrow">POUR LES BELLES ADRESSES</span>
       <h1>Votre espace professionnel.</h1>
       <p>
-        Revendiquez votre fiche avec son SIRET et un justificatif de votre
-        habilitation. Un administrateur examine la demande avant de vous donner
-        accès.
+        Revendiquez votre fiche avec son SIRET, un e-mail professionnel vérifié
+        et un justificatif facultatif de votre habilitation. Un administrateur
+        examine la demande avant de vous donner accès.
       </p>
       {!user && (
         <Link className="primary" href="/connexion">
@@ -94,9 +98,12 @@ export default async function Professionals() {
                     : "Rejetée"}
               </p>
               {c.reason && <p>Motif : {c.reason}</p>}
-              <a href={`/api/claims/${c.id}/document`}>
-                Mon justificatif privé
-              </a>
+              {c.status === "PENDING" && !c.verified && (
+                <CodeVerification id={c.id} />
+              )}
+              {c.document && (
+                <a href={proofUrl(c.id, user!.id)}>Mon justificatif privé</a>
+              )}
             </article>
           ))}
         </>
